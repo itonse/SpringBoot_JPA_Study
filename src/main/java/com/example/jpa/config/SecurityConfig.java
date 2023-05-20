@@ -9,9 +9,13 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter{
-	
+
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
+
+		http.csrf().disable();
+		http.headers().frameOptions().sameOrigin();
+
 		http.authorizeRequests()
 		.anyRequest().permitAll();   // 모든 경로에서 엑세스 허용
 	}
