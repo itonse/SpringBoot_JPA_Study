@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class Notice {   // 엔티티
+public class Notice {   // Notice Model 과 다르게 DB 와 연동할 때 이용되는 엔티티
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,6 +25,8 @@ public class Notice {   // 엔티티
     private String contents;
     @Column
     private LocalDateTime regDate;
+    @Column
+    private LocalDateTime updateDate;
     @Column
     private int hits;
     @Column
