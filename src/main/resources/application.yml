@@ -4,8 +4,8 @@ spring:
       enabled: true
       path: /h2-console
 
-  datasource: # ??? DB?? ?? ? ??
-     url: jdbc:h2:mem:test   # DB ??? ??? ??
+  datasource: # H2 DB에 접속하기 편하게 설정
+     url: jdbc:h2:mem:test
      username: sa
      password:
      driverClassName: org.h2.Driver
