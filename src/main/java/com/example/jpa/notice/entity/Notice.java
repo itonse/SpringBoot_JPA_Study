@@ -28,7 +28,11 @@ public class Notice {   // Notice Model 과 다르게 DB 와 연동할 때 이�
     @Column
     private LocalDateTime updateDate;
     @Column
+    private LocalDateTime deletedDate;
+    @Column
     private int hits;
     @Column
     private int likes;
+    @Column
+    private boolean deleted;
 }
