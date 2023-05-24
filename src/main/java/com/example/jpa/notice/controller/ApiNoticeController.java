@@ -1,27 +1,18 @@
 package com.example.jpa.notice.controller;
 
 import com.example.jpa.notice.entity.Notice;
-import com.example.jpa.notice.exception.AlreadyDeletedException;
-import com.example.jpa.notice.exception.AlreadyDeletedException;
-import com.example.jpa.notice.exception.DuplicateNoticeException;
+import com.example.jpa.notice.exception.AlreadDeletedException;
 import com.example.jpa.notice.exception.NoticeNotFoundException;
 import com.example.jpa.notice.model.NoticeDeleteInput;
 import com.example.jpa.notice.model.NoticeInput;
 import com.example.jpa.notice.model.NoticeModel;  // 다른 패키지이므로, import 필요
-import com.example.jpa.notice.model.ResponseError;
 import com.example.jpa.notice.repository.NoticeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.Errors;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
 import javax.persistence.Id;
-import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -149,7 +140,7 @@ public class ApiNoticeController {
     }
     */
 
-    /* //15번
+    // 15번
     @PostMapping("/api/notice")
     public Notice addNotice(@RequestBody NoticeInput noticeInput) {   // @RequestBody 를 붙이지 않으면 JSON 을 class 에 매핑하는 부분이 누락되어, title 과 contents 값이 null 이 된다.
         Notice notice = Notice.builder()
@@ -164,7 +155,6 @@ public class ApiNoticeController {
 
         return resultNotice;
     }
-    */
 
     // 16번
     @GetMapping("/api/notice/{id}")   // 경로변수 {id} 는 동적인 값
@@ -271,8 +261,8 @@ public class ApiNoticeController {
 
     // 23번
     // 200에러로 던지기 위해서 설정
-    @ExceptionHandler(AlreadyDeletedException.class)
-    public ResponseEntity<String> HandlerNoticeNotFoundException(AlreadyDeletedException exception) {  // 익셉션핸들러가 캐치함.
+    @ExceptionHandler(AlreadDeletedException.class)
+    public ResponseEntity<String> HandlerNoticeNotFoundException(AlreadDeletedException exception) {  // 익셉션핸들러가 캐치함.
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.OK);   // 에러 메세지 던지고, 400 Bad Request 를 던진다.
     }
 
@@ -282,7 +272,7 @@ public class ApiNoticeController {
                 .orElseThrow(() -> new NoticeNotFoundException("공지사항의 글이 존재하지 않습니다."));
 
         if (notice.isDeleted()) {
-            throw new AlreadyDeletedException("이미 삭제된 글입니다.");
+            throw new AlreadDeletedException("이미 삭제된 글입니다.");
         } else {
             notice.setDeletedDate(LocalDateTime.now());
             notice.setDeleted(true);
@@ -309,117 +299,5 @@ public class ApiNoticeController {
     public void deleteAll() {
 
         noticeRepository.deleteAll();  // deleteAll 사용하면 간단
-    }
-
-    /* // 26번  앞에서(15번)는 .set 으로 엔티티를 저장하는 형태였다면, 여기서는 빌더패턴을 사용해 저장.
-    @PostMapping("/api/notice")
-    public void addNotice(@RequestBody NoticeInput noticeInput) {   // input 값으로는 title 과 contents 만 받음
-        Notice notice = Notice.builder()  //  노티드 엔티티 생성
-                .title(noticeInput.getTitle())
-                .contents(noticeInput.getContents())
-                .hits(0)
-                .likes(0)
-                .regDate(LocalDateTime.now())
-                .build();
-
-        noticeRepository.save(notice);
-    }
-    */
-
-    /* // 27번  에러처리 추가
-    @PostMapping("/api/notice")
-    public ResponseEntity<Object> addNotice(@RequestBody @Valid NoticeInput noticeInput
-        , Errors errors) {
-
-        if (errors.hasErrors()) {  // 에러가 존재한다면, 에러 던지기 (서비스에 input 클래스의 @NotBlank 에 작성했던 메세지가 출력됨.)
-            List<ResponseError> responseErrors = new ArrayList<>();
-
-            errors.getAllErrors().stream().forEach(e-> {   // 모든 에러들을 돌면서 취합함
-                responseErrors.add(ResponseError.of((FieldError)e));   // 에러 추가
-            });
-
-            return new ResponseEntity<>(responseErrors, HttpStatus.BAD_REQUEST);
-        }
-
-        // 정상적인 저장...
-        noticeRepository.save(Notice.builder()
-                .title(noticeInput.getTitle())
-                .contents(noticeInput.getContents())
-                .hits(0)
-                .likes(0)
-                .regDate(LocalDateTime.now())
-                .build());
-
-        return ResponseEntity.ok().build();
-    }
-    */
-
-    /* // 28번 (27번 +사이즈체크)
-    @PostMapping("/api/notice")
-    public ResponseEntity<Object> addNotice(@RequestBody @Valid NoticeInput noticeInput
-            , Errors errors) {
-
-        if (errors.hasErrors()) {  // 에러가 존재한다면, 에러 던지기 (서비스에 input 클래스의 @NotBlank 에 작성했던 메세지가 출력됨.)
-            List<ResponseError> responseErrors = new ArrayList<>();
-
-            errors.getAllErrors().stream().forEach(e-> {   // 모든 에러들을 돌면서 취합함
-                responseErrors.add(ResponseError.of((FieldError)e));   // 에러 추가
-            });
-
-            return new ResponseEntity<>(responseErrors, HttpStatus.BAD_REQUEST);
-        }
-
-        // 정상적인 저장...
-        noticeRepository.save(Notice.builder()
-                .title(noticeInput.getTitle())
-                .contents(noticeInput.getContents())
-                .hits(0)
-                .likes(0)
-                .regDate(LocalDateTime.now())
-                .build());
-
-        return ResponseEntity.ok().build();
-    }
-    */
-
-    // 29번
-    @GetMapping("/api/notice/latest/{size}")
-    public Page<Notice> noticeLatest(@PathVariable int size) {   // 페이지 형태로 반환
-        Page<Notice> noticeList =
-                noticeRepository.findAll(
-                        PageRequest.of(0, size, Sort.Direction.DESC, "regDate"));
-
-        return noticeList;
-    }
-
-    // 30번
-    @ExceptionHandler(DuplicateNoticeException.class)   // DuplicateNoticeException 익셉션에 대한 익셉션핸들러 생성
-    public ResponseEntity<?> handlerDuplicateNoticeException(DuplicateNoticeException exception) {
-        return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
-    }
-
-    @PostMapping("/api/notice")
-    public void addNotice(@RequestBody NoticeInput noticeInput
-            , Errors errors) {
-
-        // 중복체크
-        LocalDateTime checkDate = LocalDateTime.now().minusMinutes(1);  // 등록시간이 (현재시간에 - 1분) 보다 크다 --> 1분미만
-
-        int noticeCount =  // 제목동일, 내용동일, 등록시간이 체크시간보다 크다. -> 중복!
-        noticeRepository.countByTitleAndContentsAndRegDateIsGreaterThanEqual(
-                noticeInput.getTitle(), noticeInput.getContents(), checkDate);
-
-
-        if (noticeCount > 0) {
-            throw new DuplicateNoticeException("1분이내에 등록된 동일한 공지사항이 존재합니다.");
-        }
-
-        noticeRepository.save(Notice.builder()
-                .title(noticeInput.getTitle())
-                .contents(noticeInput.getContents())
-                .hits(0)
-                .likes(0)
-                .regDate(LocalDateTime.now())
-                .build());
     }
 }
