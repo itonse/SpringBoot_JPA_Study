@@ -422,4 +422,11 @@ public class ApiNoticeController {
                 .regDate(LocalDateTime.now())
                 .build());
     }
+
+
+
+    // ----------- ch.1 완료 -------------
+
+
+
 }
