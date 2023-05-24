@@ -406,8 +406,8 @@ public class ApiNoticeController {
         LocalDateTime checkDate = LocalDateTime.now().minusMinutes(1);  // 등록시간이 (현재시간에 - 1분) 보다 크다 --> 1분미만
 
         int noticeCount =  // 제목동일, 내용동일, 등록시간이 체크시간보다 크다. -> 중복!
-        noticeRepository.countByTitleAndContentsAndRegDateIsGreaterThanEqual(
-                noticeInput.getTitle(), noticeInput.getContents(), checkDate);
+                noticeRepository.countByTitleAndContentsAndRegDateIsGreaterThanEqual(
+                        noticeInput.getTitle(), noticeInput.getContents(), checkDate);
 
 
         if (noticeCount > 0) {
@@ -422,11 +422,4 @@ public class ApiNoticeController {
                 .regDate(LocalDateTime.now())
                 .build());
     }
-
-
-
-    // ----------- ch.1 완료 -------------
-
-
-
 }
