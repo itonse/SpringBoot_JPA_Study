@@ -1,7 +1,9 @@
 package com.example.jpa.notice.controller;
 
 import com.example.jpa.notice.entity.Notice;
+import com.example.jpa.notice.exception.AlreadDeletedException;
 import com.example.jpa.notice.exception.NoticeNotFoundException;
+import com.example.jpa.notice.model.NoticeDeleteInput;
 import com.example.jpa.notice.model.NoticeInput;
 import com.example.jpa.notice.model.NoticeModel;  // 다른 패키지이므로, import 필요
 import com.example.jpa.notice.repository.NoticeRepository;
@@ -229,7 +231,7 @@ public class ApiNoticeController {
     }
 
     // 20번
-    @PatchMapping("api/notice/{id}/hits")  // Patch 메소드: 부분적인 수정이 필요할 때 사용
+    @PatchMapping("/api/notice/{id}/hits")  // Patch 메소드: 부분적인 수정이 필요할 때 사용
     public void noticeHits(@PathVariable Long id) {
         Notice notice = noticeRepository.findById(id)
                 .orElseThrow(() -> new NoticeNotFoundException("공지사항의 글이 존재하지 않습니다."));
@@ -237,5 +239,65 @@ public class ApiNoticeController {
         notice.setHits(notice.getHits() + 1);
 
         noticeRepository.save(notice);
+    }
+
+    // 21번
+    @DeleteMapping("/api/notice/{id}")
+    public void deleteNotice(@PathVariable Long id) {
+        Optional<Notice> notice = noticeRepository.findById(id);
+        if (notice.isPresent()) {
+            noticeRepository.delete(notice.get());
+        }
+    }
+
+    // 22번
+    @DeleteMapping("/api/notice2/{id}")
+    public void deleteNotice2(@PathVariable Long id) {
+        Notice notice = noticeRepository.findById(id)
+                .orElseThrow(() -> new NoticeNotFoundException("공지사항의 글이 존재하지 않습니다."));
+
+        noticeRepository.delete(notice);
+    }
+
+    // 23번
+    // 200에러로 던지기 위해서 설정
+    @ExceptionHandler(AlreadDeletedException.class)
+    public ResponseEntity<String> HandlerNoticeNotFoundException(AlreadDeletedException exception) {  // 익셉션핸들러가 캐치함.
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.OK);   // 에러 메세지 던지고, 400 Bad Request 를 던진다.
+    }
+
+    @DeleteMapping("/api/notice3/{id}")
+    public void deleteNotice3(@PathVariable Long id) {
+        Notice notice = noticeRepository.findById(id)
+                .orElseThrow(() -> new NoticeNotFoundException("공지사항의 글이 존재하지 않습니다."));
+
+        if (notice.isDeleted()) {
+            throw new AlreadDeletedException("이미 삭제된 글입니다.");
+        } else {
+            notice.setDeletedDate(LocalDateTime.now());
+            notice.setDeleted(true);
+            noticeRepository.save(notice);
+        }
+    }
+
+    // 24번
+    @DeleteMapping("/api/notice4")
+    public void deleteNotice4(@RequestBody NoticeDeleteInput noticeDeleteInput) {  // 복수의 엔티티를 대상으로 하는 것이라서, input 객체로 받음.
+        List<Notice> noticeList = noticeRepository.findByIdIn(noticeDeleteInput.getIdList())  // 밑줄에 예외처리로 했기 때문에 Optional 이 아닌 리스트로 받음
+                .orElseThrow(() -> new NoticeNotFoundException("공지사항의 글이 존재하지 않습니다."));
+
+        noticeList.stream().forEach(e ->{   // 스트림을 이용해 엔티티 각각을 받아와 설정하기
+            e.setDeleted(true);
+            e.setDeletedDate(LocalDateTime.now());
+        });
+
+        noticeRepository.saveAll(noticeList);   // 복수의 엔티티를 저장하는 것이니 saveAll 하기.
+    }
+
+    // 25번
+    @DeleteMapping("/api/notice/all")
+    public void deleteAll() {
+
+        noticeRepository.deleteAll();  // deleteAll 사용하면 간단
     }
 }
