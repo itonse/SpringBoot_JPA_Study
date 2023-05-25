@@ -5,15 +5,15 @@ spring:
       path: /h2-console
 
   datasource: # H2 DB에 접속하기 편하게 설정
-     url: jdbc:h2:mem:test
+     url: jdbc:h2:mem:test;NON_KEYWORDS=USER
      username: sa
      password:
      driverClassName: org.h2.Driver
 
   jpa:
     hibernate:
-       ddl-auto: none
-    generate-ddl: false
+       ddl-auto: none   # 스키마 수동생성 (schema.sql 이용)
+    generate-ddl: false   # DDL 생성은 직접 해야함 (data.sql 이용)
 
     properties:
       format_sql: true
