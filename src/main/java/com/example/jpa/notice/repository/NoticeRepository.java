@@ -12,6 +12,9 @@ import java.util.Optional;
 @Repository   // 레파지토리
 public interface NoticeRepository extends JpaRepository<Notice, Long> {   // CRUD 기능이 있는 JPA 레파지토리를 상속 받음, <엔티티, 엔티티의 PK 타입>
 
+    // 인터페이스의 메소드 형식: 반환타입 함수명(매개변수)
+    // JPA 레파지토리에 의해 메소드의 이름을 분석하여 자동으로 SQL 쿼리를 생성하고 실행
+
     Optional<List<Notice>> findByIdIn(List<Long> idList);  // 값이 없을수도 있으니 Optional 로 감싸기
 
     // 제목동일, 내용동일, 등록시간이 체크시간보다 크다. -> 중복!

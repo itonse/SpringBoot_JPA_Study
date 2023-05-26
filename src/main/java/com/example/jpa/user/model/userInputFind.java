@@ -12,8 +12,10 @@ import javax.validation.constraints.Size;
 @NoArgsConstructor
 @Builder
 @Data
-public class UserUpdate {
+public class userInputFind {
 
+    @NotBlank(message = "이름은 필수 항목 입니다.")
+    private String userName;
 
     @Size(max = 20, message = "연락처는 최대 20자까지 입력해야 합니다.")
     @NotBlank(message = "연락처는 필수 항목 입니다.")
