@@ -1,5 +1,8 @@
 package com.example.jpa.user.controller;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.exceptions.SignatureVerificationException;
 import com.example.jpa.notice.entity.Notice;
 import com.example.jpa.notice.entity.NoticeLike;
 import com.example.jpa.notice.model.NoticeResponse;
@@ -12,6 +15,8 @@ import com.example.jpa.user.exception.PasswordNotMatchException;
 import com.example.jpa.user.exception.UserNotFoundException;
 import com.example.jpa.user.model.*;
 import com.example.jpa.user.repository.UserRepository;
+import com.example.jpa.util.JWTUtils;
+import com.example.jpa.util.PasswordUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -21,9 +26,11 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -144,12 +151,11 @@ public class ApiUserController {
         return noticeResponseList;
     }
 
-    /* // 36번
     @ExceptionHandler(value = {ExistsEmailException.class, PasswordNotMatchException.class})
     public ResponseEntity<?> TwoExceptionHandler(RuntimeException exception) {
         return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
-    
+    /* // 36번
     @PostMapping("/api/user")
     public ResponseEntity<?> addUser(@RequestBody @Valid UserInput userInput, Errors errors) {
 
@@ -325,4 +331,152 @@ public class ApiUserController {
         List<NoticeLike> noticeLikeList = noticeLikeRepository.findByUser(user);
         return noticeLikeList;    // 출력 내용: {n번째 글의 작성자, n번째 글, 좋아요한 사람} 순서로
     }
+
+    /* // 43번 토큰발행 준비
+    @PostMapping("/api/user/login")
+    public ResponseEntity<?> createToken(@RequestBody @Valid UserLogin userLogin, Errors errors) {
+
+        List<ResponseError> responseErrorList = new ArrayList<>();
+        if (errors.hasErrors()) {
+            errors.getAllErrors().stream().forEach((e) -> {
+                responseErrorList.add(ResponseError.of((FieldError)e));
+            });
+            return new ResponseEntity<>(responseErrorList, HttpStatus.BAD_REQUEST);
+        }
+
+        User user = userRepository.findByEmail(userLogin.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("이메일에 해당하는 유저가 없습니다."));
+
+        // 비밀번호 검증 (암호화가 안된 userLogin 패스워드랑 암호화 된 user 패스워드 매칭)
+        if (!PasswordUtils.equalPassword(userLogin.getPassword(), user.getPassword())) {
+            throw new PasswordNotMatchException("비밀번호가 일치하지 않습니다.");
+        }
+
+        return ResponseEntity.ok().build();
+    }
+    */
+
+    /* // 44번 토큰발행 시점 (43번 이어서)
+    @PostMapping("/api/user/login")
+    public ResponseEntity<?> createToken(@RequestBody @Valid UserLogin userLogin, Errors errors) {
+
+        List<ResponseError> responseErrorList = new ArrayList<>();
+        if (errors.hasErrors()) {
+            errors.getAllErrors().stream().forEach((e) -> {
+                responseErrorList.add(ResponseError.of((FieldError)e));
+            });
+            return new ResponseEntity<>(responseErrorList, HttpStatus.BAD_REQUEST);
+        }
+
+        User user = userRepository.findByEmail(userLogin.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("이메일에 해당하는 유저가 없습니다."));
+
+        if (!PasswordUtils.equalPassword(userLogin.getPassword(), user.getPassword())) {
+            throw new PasswordNotMatchException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 토큰발행
+        String token = JWT.create()   // 토큰 객체생성
+                .withExpiresAt(new Date())   // 토큰 유효기간(현재)
+                .withClaim("user_id", user.getId())  // 토큰에 추가정보 넣기
+                .withSubject(user.getUserName())   // 토큰이 어떤 주체에 대해 유효한지
+                .withIssuer(user.getEmail())   // 토큰 발급 주체
+                .sign(Algorithm.HMAC512("fastcampus".getBytes()));  // HMAC512 알고리즘과 비밀키(fastcampus)를 사용하여 서명. (비밀키로 JWT 유효성 검증가능)
+
+        return ResponseEntity.ok().body(
+                UserLoginToken.builder().token(token).build());
+    }
+    */
+
+    // 45번 토큰 유효기간 설정
+    @PostMapping("/api/user/login")
+    public ResponseEntity<?> createToken(@RequestBody @Valid UserLogin userLogin, Errors errors) {
+
+        List<ResponseError> responseErrorList = new ArrayList<>();
+        if (errors.hasErrors()) {
+            errors.getAllErrors().stream().forEach((e) -> {
+                responseErrorList.add(ResponseError.of((FieldError)e));
+            });
+            return new ResponseEntity<>(responseErrorList, HttpStatus.BAD_REQUEST);
+        }
+
+        User user = userRepository.findByEmail(userLogin.getEmail())
+                .orElseThrow(() -> new UserNotFoundException("사용자 정보가 없습니다."));
+
+        if (!PasswordUtils.equalPassword(userLogin.getPassword(), user.getPassword())) {
+            throw new PasswordNotMatchException("비밀번호가 일치하지 않습니다.");
+        }
+
+        // 토큰 유효기간으로 사용할 Date 객체 만들기
+        LocalDateTime expiredDateTime = LocalDateTime.now().plusMonths(1);   // LocalDateTime을 이용해 Date 만들기 (현재 날짜에서 1달 뒤)
+        Date expiredDate = java.sql.Timestamp.valueOf(expiredDateTime); // LocalDateTime -> Date 형태 변환
+
+        // 토큰발행
+        String token = JWT.create()   // 토큰 객체생성
+                .withExpiresAt(expiredDate)   // 토큰 유효기간
+                .withClaim("user_id", user.getId())  // 토큰에 추가정보 넣기
+                .withSubject(user.getUserName())   // 토큰이 어떤 주체에 대해 유효한지
+                .withIssuer(user.getEmail())   // 토큰 발급 주체
+                .sign(Algorithm.HMAC512("fastcampus".getBytes()));  // HMAC512 알고리즘과 비밀키(fastcampus)를 사용하여 서명. (비밀키로 JWT 유효성 검증가능)
+
+        return ResponseEntity.ok().body(
+                UserLoginToken.builder().token(token).build());
+    }
+
+    // 46번 JWT 토큰 재발행
+    @PatchMapping("/api/user/login")
+    public ResponseEntity<?> refreshToken(HttpServletRequest request) {  // 토큰은 일반적으로 Header 에 보내므로, 요청헤더에서 Header 의 데이터를 꺼내옴
+
+        String token = request.getHeader("F-TOKEN");  // 헤더에서 토큰의 값을 받음
+        String email = "";
+
+        // 토큰의 유효성을 검증하고, 해당 토큰의 User 정보를 가져와야 하기 때문에 토큰 발급주체인 email 이 필요
+        try {
+            email = JWT.require(Algorithm.HMAC512("fastcampus".getBytes()))
+                    .build()
+                    .verify(token) // 토큰 검증
+                    .getIssuer();   // Issuer 에 이메일이 있음 (여기서 email과 Issuer는 완전히 동일)
+        } catch(SignatureVerificationException e) {   // 정상적인 토큰이 아니라면 예외 잡아서 던지기
+            throw new PasswordNotMatchException("비밀번호가 일치하지 않습니다.");
+        }
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("사용자 정보가 없습니다."));
+
+        LocalDateTime expiredDateTime = LocalDateTime.now().plusMonths(1);   // LocalDateTime을 이용해 Date 만들기 (현재 날짜에서 1달 뒤)
+        Date expiredDate = java.sql.Timestamp.valueOf(expiredDateTime);
+
+        // 토큰 재발행
+        String newToken = JWT.create()   // 토큰 객체생성
+                .withExpiresAt(expiredDate)   // 토큰 유효기간
+                .withClaim("user_id", user.getId())  // 토큰에 추가정보 넣기
+                .withSubject(user.getUserName())   // 토큰이 어떤 주체에 대해 유효한지
+                .withIssuer(user.getEmail())   // 토큰 발급 주체
+                .sign(Algorithm.HMAC512("fastcampus".getBytes()));  // HMAC512 알고리즘과 비밀키(fastcampus)를 사용하여 서명. (비밀키로 JWT 유효성 검증가능)
+
+        return ResponseEntity.ok().body(
+                UserLoginToken.builder().token(newToken).build());
+    }
+
+    // 47번 JWT 토큰 삭제
+    @DeleteMapping("/api/user/login")
+    public ResponseEntity<?> removeToken(@RequestHeader("F-TOKEN") String token) {   // 요청 헤더에서 토큰을 받아옴
+
+        String email = "";
+
+        try {
+            email = JWTUtils.getIssuer(token);
+        } catch (SignatureVerificationException e) {   // 정상적인 토큰이 아니라면 예외 잡아서 던지기
+            return new ResponseEntity<>("토큰 정보가 정확하지 않습니다.", HttpStatus.BAD_REQUEST);
+        }
+
+        // ** 토큰 삭제 부분 **
+        // 세션, 쿠키삭제
+        // 크랄이언트 쿠키/로컬스토리지/세셔늣토리지
+        // 블랙리스트 작성
+
+
+        return ResponseEntity.ok().build();
+    }
+
 }
