@@ -24,4 +24,6 @@ public interface NoticeRepository extends JpaRepository<Notice, Long> {   // CRU
     int countByTitleAndContentsAndRegDateIsGreaterThanEqual(String title, String contents, LocalDateTime regDate);
 
     List<Notice> findByUser(User user);    // (관계) user 가 작성한 notice 리스트를 가져오는 함수 (JPA 레파지토리의 Read 기능)
+
+    long countByUser(User user);
 }
