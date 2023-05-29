@@ -17,7 +17,7 @@ import java.util.Optional;
 public class ResponseMessage {
 
     private ResponseMessageHeader header;
-    Object data;
+    Object body;
 
     public static ResponseMessage fail(String message) {  // fail 일 때 메세지
         return ResponseMessage.builder()
@@ -27,7 +27,7 @@ public class ResponseMessage {
                         .message(message)
                         .status(HttpStatus.BAD_REQUEST.value())
                         .build())
-                .data(null)
+                .body(null)
                 .build();
     }
 
@@ -39,7 +39,7 @@ public class ResponseMessage {
                         .message("")
                         .status(HttpStatus.OK.value())
                         .build())
-                .data(data)
+                .body(data)
                 .build();
     }
 
@@ -51,12 +51,12 @@ public class ResponseMessage {
                         .message("")
                         .status(HttpStatus.OK.value())
                         .build())
-                .data(null)
+                .body(null)
                 .build();
     }
 
 
 //    48번 문제에는 이것들만 쓰임
 //    private long totalCount;
-//    private List<User> data;
+//    private List<User> body;
 }

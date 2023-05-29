@@ -13,7 +13,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
-public class NoticeLike {   // Notice Model 과 다르게 DB 와 연동할 때 이용되는 엔티티
+public class NoticeLike {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

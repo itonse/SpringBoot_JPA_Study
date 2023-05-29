@@ -1,9 +1,13 @@
 package com.example.jpa.user.repository;
 
 import com.example.jpa.user.entity.User;
+import com.example.jpa.user.model.UserNoticeCount;
+import com.example.jpa.user.model.UserStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -23,5 +27,12 @@ public interface UserRepository extends JpaRepository<User, Long> {   // CRUD �
 
     List<User> findByEmailContainsOrPhoneContainsOrUserNameContains(
             String email, String phone, String userName);
+
+    long countByStatus(UserStatus userStatus);   // UserStatus 는 enum
+
+    // JPQL: JPA 에서 자동이 아닌 '직접적인' 쿼리 사용
+    @Query (" select u from User u where u.regDate between :startDate and :endDate ")
+    List<User> findToday(LocalDateTime startDate, LocalDateTime endDate);
+
 
 }
