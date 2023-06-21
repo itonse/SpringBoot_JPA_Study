@@ -17,6 +17,7 @@ import java.util.List;
 @Service
 public class UserServiceImpl implements UserService{   // 서비스 구현체 (하는 일은 레파지토리 호출)
 
+    // 레파지토리
     private final UserRepository userRepository;
     private final UserCustomRepository userCustomRepository;
 

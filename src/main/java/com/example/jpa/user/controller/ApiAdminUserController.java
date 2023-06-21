@@ -19,10 +19,12 @@ import java.util.Optional;
 @RestController
 public class ApiAdminUserController {   // User 관리자 기능 컨트롤러
 
+    // 레파지토리
     private final UserRepository userRepository;   // 유저레파지토리 인터페이스 사용
     private final NoticeRepository noticeRepository;  // 노티스레파지토리 인터페이스 사용
     private final UserLonginHistoryRepository userLonginHistoryRepository;
 
+    // 서비스
     private final UserService userService;
 
     /*

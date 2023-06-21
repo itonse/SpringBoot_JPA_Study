@@ -19,7 +19,7 @@ public class ResponseMessage {
     private ResponseMessageHeader header;
     Object body;
 
-    public static ResponseMessage fail(String message) {  // fail 일 때 메세지
+    public static ResponseMessage fail(String message, Object data) {  // fail 일 때 메세지
         return ResponseMessage.builder()
                 .header(ResponseMessageHeader.builder()
                         .result(false)
@@ -27,8 +27,23 @@ public class ResponseMessage {
                         .message(message)
                         .status(HttpStatus.BAD_REQUEST.value())
                         .build())
-                .body(null)
+                .body(data)
                 .build();
+    }
+
+    public static ResponseMessage fail(String message) {  // fail 일 때 메세지
+// ~60번 까지 사용
+//        return ResponseMessage.builder()
+//                .header(ResponseMessageHeader.builder()
+//                        .result(false)
+//                        .resultCode("")
+//                        .message(message)
+//                        .status(HttpStatus.BAD_REQUEST.value())
+//                        .build())
+//                .body(null)
+//                .build();
+
+        return fail(message, null);
     }
 
     public static ResponseMessage success(Object data) {
@@ -44,15 +59,17 @@ public class ResponseMessage {
     }
 
     public static ResponseMessage success() {
-        return ResponseMessage.builder()
-                .header(ResponseMessageHeader.builder()
-                        .result(true)
-                        .resultCode("")
-                        .message("")
-                        .status(HttpStatus.OK.value())
-                        .build())
-                .body(null)
-                .build();
+// ~60번 까지 사용
+//        return ResponseMessage.builder()
+//                .header(ResponseMessageHeader.builder()
+//                        .result(true)
+//                        .resultCode("")
+//                        .message("")
+//                        .status(HttpStatus.OK.value())
+//                        .build())
+//                .body(null)
+//                .build();
+        return success(null);
     }
 
 
